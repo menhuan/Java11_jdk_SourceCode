@@ -619,34 +619,49 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      */
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
+        // evict 该参数用来区分当前是否是构造模式 在这里是true所以不是构造函数模式
         Node<K,V>[] tab; Node<K,V> p; int n, i;
+        // 检查下tables是否是空的，空的初始化
         if ((tab = table) == null || (n = tab.length) == 0)
             n = (tab = resize()).length;
+        // 计算hash值是否是空的，空的就直接放数值
         if ((p = tab[i = (n - 1) & hash]) == null)
             tab[i] = newNode(hash, key, value, null);
         else {
             Node<K,V> e; K k;
+            // 上面代表存在的数组下标位置被占用了
+            //这里计算下占用的Node节点hash与传进来的相等,并且 他们的key也相等, 那么就直接把当前的节点赋值到e上
+            // key值相等必须满足两个条件
+            //    1. hash值相同
+            //    2. 两者 `==` 或者 `equals` 等
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
                 e = p;
+            //这个代表的是当前位置上的元素已经是红黑树
             else if (p instanceof TreeNode)
                 e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
             else {
+                // 链表添加数组  死循环 下一个节点是空的就放到next上
                 for (int binCount = 0; ; ++binCount) {
                     if ((e = p.next) == null) {
                         p.next = newNode(hash, key, value, null);
+                        //链表进行树化,当前数组是7个，再加一个就是8个。
                         if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
                             treeifyBin(tab, hash);
                         break;
                     }
+                    // 相等就退出
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
                         break;
                     p = e;
                 }
             }
+            //对于原先已经存在的key要不要覆盖
             if (e != null) { // existing mapping for key
                 V oldValue = e.value;
+                //onlyIfAbsent 已经有旧值的情况下，要不要进行覆盖true代表保留原先值，false代表覆盖原先值。
+                // 默认onlyIfAbsent是false
                 if (!onlyIfAbsent || oldValue == null)
                     e.value = value;
                 afterNodeAccess(e);
@@ -655,6 +670,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
         ++modCount;
         if (++size > threshold)
+            //超过限制,进行扩容
             resize();
         afterNodeInsertion(evict);
         return null;
