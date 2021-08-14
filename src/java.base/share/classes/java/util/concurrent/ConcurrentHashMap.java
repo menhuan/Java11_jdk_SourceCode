@@ -1011,16 +1011,23 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         if (key == null || value == null) throw new NullPointerException();
         int hash = spread(key.hashCode());
         int binCount = 0;
+        // 死循环
         for (Node<K,V>[] tab = table;;) {
+            //
             Node<K,V> f; int n, i, fh; K fk; V fv;
+            // 数组是空的。初始化
             if (tab == null || (n = tab.length) == 0)
                 tab = initTable();
+            // 放成功 算出来位置放入数据
             else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+                // cas放数据 这时候加锁了
                 if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value)))
                     break;                   // no lock when adding to empty bin
             }
             else if ((fh = f.hash) == MOVED)
+                // hash是-1.进行操作
                 tab = helpTransfer(tab, f);
+            //
             else if (onlyIfAbsent // check first node without acquiring lock
                      && fh == hash
                      && ((fk = f.key) == key || (fk != null && key.equals(fk)))

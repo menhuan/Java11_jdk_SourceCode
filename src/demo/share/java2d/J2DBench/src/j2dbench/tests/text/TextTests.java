@@ -650,6 +650,10 @@ public abstract class TextTests extends Test {
     }
 
     static Map physicalMap = new HashMap();
+
+    public TextTests() {
+    }
+
     public static String physicalFontNameFor(String textname, int textlen, String text) {
         Map lenMap = (Map)physicalMap.get(textname);
         if (lenMap == null) {
